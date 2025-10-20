@@ -863,18 +863,18 @@ input="""29833: 1 50 15 39
 89633: 4 40 9 500 3 2""".split("\n")
 #%%
 def parse_input(input_test):
-    dict_equations={}
+    list_equations=[]
     for line in input_test:
         parsed_line=line.split(":")
         print(parsed_line)
         test_value=int(parsed_line[0])
         equation=[int(x) for x in parsed_line[1].strip().split(" ")]
-        dict_equations[test_value]=equation
-    return dict_equations
+        list_equations.append((test_value,equation))
+    return list_equations
                
-dict_equations:dict = parse_input(input_test)
-# dict_equations:dict = parse_input(input)
-dict_equations
+list_equations = parse_input(input_test)
+list_equations= parse_input(input)
+list_equations
 
 # %%
 
@@ -892,12 +892,11 @@ def iterate(list_val:list[int],key,index:int=1,somme:int=None,list_somme:list=No
     if somme is None:
         somme=list_val[0]
     # print(somme,key)
-    if somme==key:
-        print(f"AAAAAAA {list_somme}")
-        list_somme.append(key)
-
-    if index==len(list_val):
-        list_somme.append(somme)
+    if len(list_val)==index:
+        if somme==key:
+            list_somme.append(key)
+        else:
+             list_somme.append(somme)
         return
     
     current=list_val[index]
@@ -908,30 +907,8 @@ def iterate(list_val:list[int],key,index:int=1,somme:int=None,list_somme:list=No
         # print(f"New sum: {somme}{operation}{current}={new_sum}")
         new_index=index+1
         iterate(list_val,key=key,index=new_index,somme=new_sum,list_somme=list_somme)
+    return list_somme
 
-def iterate_v2(equation,result,current_sum,index):
-    # if index==len(equation):
-    print(f"current sum={current_sum}")
-    if current_sum==result:
-        return True
-        # else:
-    if index==len(equation):
-        return False    
-        #     return False
-    # else:
-    for operation in ["*","+"]:
-        new_sum=apply_operation(current_sum,equation[index],operation)
-        return iterate_v2(equation,result,new_sum,index+1)
-        
-list_keys=list(dict_equations.keys())
-sum_calibration=0
-for key in list_keys:
-    print(f"{key=}")
-    equation=dict_equations[key]
-    result=iterate_v2(equation,key,current_sum=equation[0],index=1)
-    if result is True:
-        sum_calibration+=key
-print(f"{sum_calibration=}")
 
 # %%
 # def verify_size(list_possibilities,original_list):
@@ -939,25 +916,80 @@ print(f"{sum_calibration=}")
 #     size=len(list_possibilities)
 #     assert size==expected_size,f"Size={size} different the expected size {expected_size=}, 2**{len(original_list)}"
 
-list_keys=list(dict_equations.keys())
+list_keys=[x[0] for x in list_equations]
 sum_calibration=0
-for key in list_keys:
-    equation=dict_equations[key]
-    print(f"Liste values={equation}")
+list_sum=[]
+for i,key in enumerate(list_keys):
+    equation=list_equations[i][1]
+    # print(f"Liste values={equation}")
     possibilities=[]
-    iterate(equation,list_somme=possibilities,key=key)
+    iterate(equation,key,index=1,list_somme=possibilities)
+    if key==1759:
+        print("key",key,":",equation,possibilities)
     # verify_size(possibilities,equation) 
     # arr_indx=np.where(key==np.array(possibilities))[0]
     if key in possibilities:
-        print(f"BBBB{possibilities=}")
+        # print(f"BBBB{possibilities=}")
         sum_calibration+=key
-        print(f"sum_calibration updated = {sum_calibration}")
-    else:
-        print(f"NOT FOUND {key}:{possibilities}")
+        # print(f"sum_calibration updated = {sum_calibration}")
+        list_sum.append(key)
+    # else:
+    #     print(f"NOT FOUND {key}:{possibilities}")
 
 
 # %%
 print(f"sum_calibration = {sum_calibration}")
 #sum_calibration = 1298103528335 --> to low
             #      1298103531759
+
+                #    1298103528335
+                #    1298103531759
+# %%
+key=1759
+equation=[57,6,8,5,9]
+list_somme=[]
+iterate(equation,key=key,index=1,somme=None,list_somme=list_somme)
+len(list_somme)
+list_somme
+# %%
+
+
+
+
+
+
+
+
+
+
+#%%
+def iterate(list_val: list[int], key: int, index: int = 1, somme: int | None = None, list_somme: list[int] | None = None):
+    """Explore toutes les combinaisons de +/* à gauche vers droite et stocke les totaux."""
+    if list_somme is None:
+        list_somme = []
+
+    if somme is None:
+        somme = list_val[0]
+
+    # condition d'arrêt : on a épuisé la liste
+    if index == len(list_val):
+        if somme == key:
+            list_somme.append(key)
+        else:
+            list_somme.append(somme)
+        return
+
+    current = list_val[index]
+
+    for operation in ["*", "+"]:
+        new_sum = apply_operation(somme, current, operation)
+        iterate(list_val, key=key, index=index + 1, somme=new_sum, list_somme=list_somme)
+
+    return list_somme
+key = 1759
+equation = [57, 6, 8, 5, 9]
+possibilities = []
+iterate(equation, key=key, list_somme=possibilities)
+print(len(possibilities), 1759 in possibilities)
+
 # %%
