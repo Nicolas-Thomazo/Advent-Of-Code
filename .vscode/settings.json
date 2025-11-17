@@ -1,0 +1,91 @@
+{
+    //
+    // ####################################
+    // ############## Visuel ##############
+    // ####################################
+    //
+    // Color
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#0d2e67",
+        "activityBar.activeBackground": "#011f53",
+        "statusBar.background": "#0d2e67",
+        "titleBar.activeBackground": "#0d2e67",
+        "titleBar.inactiveBackground": "#0d2e67",
+        "menu.background": "#011f53",
+        "statusBarItem.remoteBackground": "#011f53",
+    },
+    //Location of side bar to avoid jump in code when opening and closing it
+    "workbench.editor.enablePreview": false,
+    "workbench.editor.tabSizing": "shrink",
+    "workbench.settings.editor": "json",
+    //
+    // ####################################
+    // ############## Pylance #############
+    // ####################################
+    //
+    // Active l'affichage des types de retour inférés pour les fonctions
+    "python.analysis.inlayHints.variableTypes": true,
+    // Permet à Pylance d'inférer les types de retour des fonctions pour une meilleure auto-complétion
+    "python.analysis.inlayHints.functionReturnTypes": true,
+    // Ajoute automatiquement les annotations de type lorsque Pylance génère du code
+    "python.analysis.generateWithTypeAnnotation": true,
+    "python.analysis.languageServerMode": "full",
+    "python.analysis.typeCheckingMode": "standard",
+    "python.analysis.autoImportCompletions": true,
+    //
+    // ###################################
+    // ########## Formatting #############
+    // ###################################
+    //
+    "ruff.nativeServer": "on",
+    "editor.formatOnSave": true,
+    // "files.autoSave": "afterDelay",
+    "editor.linkedEditing": true,
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        // This will format the code AND fix all auto-fixable linting errors.
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    //
+    // ###################################
+    // ########## Markdown #############
+    // ###################################
+    //
+    //When scrolling in coding markdown windows, scroll also in priew ctrl+shift+v to get preview
+    "markdown.preview.scrollEditorWithPreview": true,
+    "markdown.preview.scrollPreviewWithEditor": true,
+    "editor.cursorBlinking": "phase",
+    "python.analysis.extraPaths": [
+        "./src",
+        "./src"
+    ],
+    //
+    // ###################################
+    // ############# Tests #############
+    // ###################################
+    //
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+        "tests/unit",
+        "tests/integration",
+        "tests/end2end"
+    ],
+    //
+    // ###################################
+    // ########### Sonarqube #############
+    // ###################################
+    //
+    "sonarlint.connectedMode.project": {
+        "connectionId": "MySonarConnection",
+        "projectKey": "org.sonarqube:chatbdf"
+    },
+}
