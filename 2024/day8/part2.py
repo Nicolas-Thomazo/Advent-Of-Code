@@ -1,4 +1,5 @@
 # %%
+import math
 from itertools import combinations
 from pathlib import Path
 
@@ -49,19 +50,22 @@ matrix_input = array_signal.copy()
 
 
 def compute_equation(node_1: tuple[int, int], node_2: tuple[int, int], t: float):
-    x = node_1[0] + t * (node_2[0] - node_1[0])
-    y = node_1[1] + t * (node_2[1] - node_1[1])
-    return x, y
+    dx = node_2[0] - node_1[0]
+    dy = node_2[1] - node_1[1]
+    x = (node_1[0] + t * (dx)) / math.gcd(dx, dy)
+    y = (node_1[1] + t * (dy)) / math.gcd(dx, dy)
+    return int(x), int(y)
 
 
 def compute_coordinates_antinodes(
     node_1: tuple[int, int], node_2: tuple[int, int]
-) -> tuple[tuple[float, float], tuple[float, float]]:
-    x, y = compute_equation(node_1, node_2, 2)
-    antinode_1 = (x, y)
-    x2, y2 = compute_equation(node_1, node_2, -1)
-    antinode_2 = (x2, y2)
-    return antinode_1, antinode_2
+) -> list[tuple[float, float]]:
+    list_antinodes = []
+    for t in range(-50, 50, 1):
+        x, y = compute_equation(node_1, node_2, t)
+        # print(f"x={x} y={y} t={t}")
+        list_antinodes.append((x, y))
+    return list_antinodes
 
 
 def get_all_nodes_values(matrix_input):
@@ -70,11 +74,14 @@ def get_all_nodes_values(matrix_input):
     return list(unique_value_matrix)
 
 
-def mark_antinodes_on_matrix(matrix_copy, antinode_1, antinode_2):
-    if antinode_1[0] < matrix_copy.shape[0] and antinode_1[1] < matrix_copy.shape[1]:
+def mark_antinodes_on_matrix(matrix_copy, antinode_1):
+    if (
+        antinode_1[0] < matrix_copy.shape[0]
+        and antinode_1[1] < matrix_copy.shape[1]
+        and antinode_1[0] >= 0
+        and antinode_1[1] >= 0
+    ):
         matrix_copy[antinode_1] = "#"  # type: ignore
-    if antinode_2[0] < matrix_copy.shape[0] and antinode_2[1] < matrix_copy.shape[1]:
-        matrix_copy[antinode_2] = "#"  # type: ignore
     return matrix_copy
 
 
@@ -89,6 +96,7 @@ def add_antinode_to_set(set_antinodes, antinode, shape_matrix):
     return set_antinodes
 
 
+# %%
 list_nodes_values: list[str] = get_all_nodes_values(matrix_input)
 print("*" * 50, "Get nodes coordinates", "*" * 50)
 print(
@@ -108,14 +116,15 @@ for node_value in list_nodes_values:
             "-" * 10,
         )
     for node_1, node_2 in combinations_vertices:
-        antinode_1, antinode_2 = compute_coordinates_antinodes(node_1, node_2)
-        add_antinode_to_set(set_antinodes, antinode_1, matrix_input.shape)
-        add_antinode_to_set(set_antinodes, antinode_2, matrix_input.shape)
+        list_antinodes = compute_coordinates_antinodes(node_1, node_2)
+        for antinode in list_antinodes:
+            add_antinode_to_set(set_antinodes, antinode, matrix_input.shape)
+            if DEBUG_MODE:
+                mark_antinodes_on_matrix(matrix_copy, antinode)
+
         if DEBUG_MODE:
             print(f"{node_1=} {node_2=}")
-            mark_antinodes_on_matrix(matrix_copy, antinode_1, antinode_2)
             print(matrix_copy)
 
 print("*" * 25, f"Total antinodes found: {len(set_antinodes)}", "*" * 25)
-
 # %%
