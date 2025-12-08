@@ -53,7 +53,7 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "files.insertFinalNewline": true,
-    "files.trimTrailingWhitespace": true,
+    "files.trimTrailingWhitespace": false,
     //
     // ###################################
     // ########## Markdown #############
