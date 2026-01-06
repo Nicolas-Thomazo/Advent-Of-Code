@@ -133,19 +133,25 @@ def get_next_vetice(i, liste_vertices):
 
 matrix = create_matrix(new_liste_vertices)
 matrix = add_vertice_to_matrix(new_liste_vertices, matrix)
-
+print(matrix)
 for i, current_vertice in enumerate(new_liste_vertices):
     next_x, next_y = get_next_vetice(i, new_liste_vertices)
     current_x, current_y = current_vertice[1], current_vertice[0]
-    print(f"{current_vertice=} {next_x},{next_y}")
-    delta_x = next_x - current_vertice[1]
-    delta_y = next_y - current_vertice[0]
+    print(f"current({current_x},{current_y}) ({next_x},{next_y})")
+    delta_x = abs(next_x - current_vertice[1])
+    delta_y = abs(next_y - current_vertice[0])
     print(f"{delta_x=} {delta_y=}")
     if delta_x == 0:
-        matrix[current_x, current_y : current_y + delta_y] = 1
-    if delta_y == 0:
-        matrix[current_x : current_x + delta_x, current_y] = 1
+        miny = min(next_y, current_y)
+        matrix[current_x, miny : miny + delta_y + 1] = 1
+    elif delta_y == 0:
+        minx = min(next_x, current_x)
+        matrix[minx : minx + delta_x + 1, current_y] = 1
+    else:
+        raise Exception("not a 0 in delta")
+    print("*" * 20)
 
+print(matrix)
 plt.imshow(matrix)
 plt.show()
 # %%
