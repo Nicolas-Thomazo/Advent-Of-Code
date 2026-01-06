@@ -1,6 +1,6 @@
 # %%
-from itertools import combinations
 from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -49,58 +49,103 @@ def get_max_size(liste):
 def create_matrix(liste):
     max_x, max_y = get_max_size(liste)
     print(f"{max_x=} {max_y=}")
-    matrix = np.zeros((max_x+1, max_y+1))
+    # matrix = np.zeros((max_x + 1, max_y + 1))
+    matrix = np.zeros((max_y + 1, max_x + 1))
     return matrix
 
+
+#####################################
+###### Before compression ###########
+#####################################
 matrix = create_matrix(liste)
+for coor in liste:
+    matrix[(coor[1], coor[0])] = 2
+
+plt.imshow(matrix)
+plt.show()
 
 
 # %%
-def compute_area(pair_value):
-    coor1, coor2 = pair_value[0], pair_value[1]
-    largeur = abs(coor1[0] - coor2[0]) + 1
-    longueur = abs(coor1[1] - coor2[1]) + 1
-    area = largeur * longueur
-    return area
+#########################
+###### Compress #########
+#########################
 
 
-def fill_matrix(matrix, coor1, coor2):
-    matrix[coor1]=2
-    matrix[coor2]=2
-    delta_x=abs(coor1[0]-coor2[0])
-    delta_y=abs(coor1[1]-coor1[1])
-    min_x=min(coor1[0],coor2[0])
-    min_y=min(coor1[1],coor1[1])
-    print(f"{delta_x=} {delta_y=} {min_x=} {min_y=}")
+def get_mapping_rank_to_values(list_coordinates):
+    uniques_sorted_coor = np.sort(list(set(list_coordinates)))
+    dict_mapping = {}
+    for i, x in enumerate(uniques_sorted_coor):
+        dict_mapping[x] = i
+    return dict_mapping
 
-    if delta_y==0:
-        index_null=matrix[min_x:min_x+delta_x,min_y]==0
-        matrix[min_x:min_x+delta_x,min_y][index_null]=1
-    elif delta_x==0:
-        index_null=matrix[min_x,min_y:min_y+delta_y]==0
-        matrix[min_x,min_y:min_y+delta_y][index_null]=1
-    else:
-        raise Exception("Error")
-    # matrix[min_x]
+
+def compress_2d(liste):
+    liste_x_val = []
+    liste_y_val = []
+    new_liste_vertices = []
+    for vertice in liste:
+        coor1, coor2 = vertice[0], vertice[1]
+        liste_x_val.append(coor1)
+        liste_y_val.append(coor2)
+
+    dict_mapping_x = get_mapping_rank_to_values(liste_x_val)
+    dict_mapping_y = get_mapping_rank_to_values(liste_y_val)
+
+    new_liste_x = []
+    new_liste_y = []
+    new_liste_vertices = []
+    for x, y in zip(liste_x_val, liste_y_val):
+        rank_x = dict_mapping_x[x]
+        rank_y = dict_mapping_y[y]
+        new_liste_x.append(rank_x)
+        new_liste_y.append(rank_y)
+        new_liste_vertices.append((rank_x, rank_y))
+    return new_liste_vertices
+
+
+def add_vertice_to_matrix(list_vertices, matrix):
+    for coor in list_vertices:
+        matrix[(coor[1], coor[0])] = 2
     return matrix
 
-list_combinations = combinations(liste, 2)
-matrix = create_matrix(liste)
-print(f"{matrix=}")
 
-liste_area = []
-list_pair_values = []
-for pair_value in list_combinations:
-    print("a")
-    coor1, coor2 = pair_value[0], pair_value[1]
-    list_pair_values.append(pair_value)
-    matrix=fill_matrix(matrix=matrix, coor1=coor1, coor2=coor2)
-    # area = compute_area(pair_value)
-    # print(f"{pair_value=}: Area={area}")
-    # liste_area.append(area)
+new_liste_vertices = compress_2d(liste)
+print(f"{new_liste_vertices}")
+matrix = create_matrix(new_liste_vertices)
+matrix = add_vertice_to_matrix(new_liste_vertices, matrix)
 
-# print(f"Answer={np.max(liste_area)}")
-# print(f"{matrix=}")
+plt.imshow(matrix)
+plt.show()
+
+# %%
+
+
+#################################
+###### Fill the edges ###########
+#################################
+def get_next_vetice(i, liste_vertices):
+    if i == len(liste_vertices) - 1:
+        after_vertice = liste_vertices[0]
+    else:
+        after_vertice = liste_vertices[i + 1]
+    return after_vertice[1], after_vertice[0]
+
+
+matrix = create_matrix(new_liste_vertices)
+matrix = add_vertice_to_matrix(new_liste_vertices, matrix)
+
+for i, current_vertice in enumerate(new_liste_vertices):
+    next_x, next_y = get_next_vetice(i, new_liste_vertices)
+    current_x, current_y = current_vertice[1], current_vertice[0]
+    print(f"{current_vertice=} {next_x},{next_y}")
+    delta_x = next_x - current_vertice[1]
+    delta_y = next_y - current_vertice[0]
+    print(f"{delta_x=} {delta_y=}")
+    if delta_x == 0:
+        matrix[current_x, current_y : current_y + delta_y] = 1
+    if delta_y == 0:
+        matrix[current_x : current_x + delta_x, current_y] = 1
+
 plt.imshow(matrix)
 plt.show()
 # %%
