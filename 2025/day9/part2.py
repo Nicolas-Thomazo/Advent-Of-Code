@@ -1,4 +1,5 @@
 # %%
+from itertools import combinations, product
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -28,7 +29,7 @@ def get_content(use_demo: bool):
     return parsed_liste
 
 
-liste = get_content(use_demo=True)
+liste = get_content(use_demo=False)
 print(f"input={liste}")
 
 
@@ -61,8 +62,8 @@ matrix = create_matrix(liste)
 for coor in liste:
     matrix[(coor[1], coor[0])] = 2
 
-plt.imshow(matrix)
-plt.show()
+# plt.imshow(matrix)
+# plt.show()
 
 
 # %%
@@ -131,27 +132,118 @@ def get_next_vetice(i, liste_vertices):
     return after_vertice[1], after_vertice[0]
 
 
+def fill_edges(matrix, liste_vertices):
+    for i, current_vertice in enumerate(liste_vertices):
+        next_x, next_y = get_next_vetice(i, liste_vertices)
+        current_x, current_y = current_vertice[1], current_vertice[0]
+        print(f"current({current_x},{current_y}) ({next_x},{next_y})")
+        delta_x = abs(next_x - current_vertice[1])
+        delta_y = abs(next_y - current_vertice[0])
+        print(f"{delta_x=} {delta_y=}")
+        if delta_x == 0:
+            miny = min(next_y, current_y)
+            matrix[current_x, miny : miny + delta_y + 1] = 1
+        elif delta_y == 0:
+            minx = min(next_x, current_x)
+            matrix[minx : minx + delta_x + 1, current_y] = 1
+        else:
+            raise Exception("not a 0 in delta")
+        print("*" * 20)
+    return matrix
+
+
 matrix = create_matrix(new_liste_vertices)
 matrix = add_vertice_to_matrix(new_liste_vertices, matrix)
-print(matrix)
-for i, current_vertice in enumerate(new_liste_vertices):
-    next_x, next_y = get_next_vetice(i, new_liste_vertices)
-    current_x, current_y = current_vertice[1], current_vertice[0]
-    print(f"current({current_x},{current_y}) ({next_x},{next_y})")
-    delta_x = abs(next_x - current_vertice[1])
-    delta_y = abs(next_y - current_vertice[0])
-    print(f"{delta_x=} {delta_y=}")
-    if delta_x == 0:
-        miny = min(next_y, current_y)
-        matrix[current_x, miny : miny + delta_y + 1] = 1
-    elif delta_y == 0:
-        minx = min(next_x, current_x)
-        matrix[minx : minx + delta_x + 1, current_y] = 1
-    else:
-        raise Exception("not a 0 in delta")
-    print("*" * 20)
-
+matrix = fill_edges(matrix, new_liste_vertices)
 print(matrix)
 plt.imshow(matrix)
 plt.show()
 # %%
+import sys
+
+sys.setrecursionlimit(50_000)
+
+matrix = create_matrix(new_liste_vertices)
+matrix = add_vertice_to_matrix(new_liste_vertices, matrix)
+matrix = fill_edges(matrix, new_liste_vertices)
+
+#################################
+###### Implement DFS ###########
+#################################
+input_x = 100
+input_y = 100
+
+
+def dfs(matrix, input_x, input_y):
+    list_neigbors = product(
+        [input_x + dx for dx in [-1, 0, 1]], [input_y + dy for dy in [-1, 0, 1]]
+    )
+    for x, y in list_neigbors:
+        if (x, y) != (input_x, input_y):
+            if matrix[x, y] == 0:
+                matrix[x, y] = 1
+                dfs(matrix, x, y)
+    return matrix
+
+
+matrix = dfs(matrix, input_x, input_y)
+plt.imshow(matrix)
+plt.show()
+
+
+# %%
+###################################
+###### Compute the area ###########
+###################################
+def compute_area(pair_value):
+    coor1, coor2 = pair_value[0], pair_value[1]
+    largeur = abs(coor1[0] - coor2[0]) + 1
+    longueur = abs(coor1[1] - coor2[1]) + 1
+    area = largeur * longueur
+    return area
+
+
+def is_sub_matrix_valid(matrix, x1, y1, x2, y2):
+    minx = min(x1, x2)
+    miny = min(y1, y2)
+    maxx = max(x1, x2)
+    maxy = max(y1, y2)
+
+    if minx == maxx:
+        is_null: bool = matrix_is_null(matrix[minx, miny:maxy])
+    elif miny == maxy:
+        is_null: bool = matrix_is_null(matrix[minx:maxx, miny])
+    else:
+        is_null: bool = matrix_is_null(matrix[minx:maxx, miny:maxy])
+    if is_null:
+        return False
+    else:
+        return True
+
+
+def matrix_is_null(matrix):
+    result = np.where(matrix == 0)[0]
+    if result.shape[0] > 0:
+        return False
+    return True
+
+
+list_combinations = combinations(new_liste_vertices, 2)
+liste_area = []
+liste_distance = []
+list_pair_values = []
+for pair_value in list_combinations:
+    coor1, coor2 = pair_value[0], pair_value[1]
+    x1, y1 = coor1[0], coor1[1]
+    x2, y2 = coor2[0], coor2[1]
+    if is_sub_matrix_valid(matrix, x1, y1, x2, y2):
+        list_pair_values.append(pair_value)
+        area = compute_area(pair_value)
+        print(f"{pair_value=}: Area={area}")
+        liste_area.append(area)
+    else:
+        print("Not valid")
+print(f"Answer={np.max(liste_area)}")
+
+# %%
+# too low 18360
