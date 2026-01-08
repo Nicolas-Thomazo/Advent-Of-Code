@@ -226,13 +226,19 @@ def matrix_is_null(matrix):
 
 
 def plot_rectangle(matrix, slice_xy, save=False, number=0, show=True):
+    img_name = Path(f"images/ploygon_{number}.png")
+    if not show and img_name.exists():
+        print("skip")
+        return None
     copy_matrix = matrix.copy()
     copy_matrix[slice_xy[0], slice_xy[1]] = 2
     plt.imshow(copy_matrix)
     if save:
-        plt.savefig(f"images/ploygon_{number}.png")
+        plt.savefig(img_name)
     if show:
         plt.show()
+    plt.close()
+    return None
 
 
 list_combinations = list(combinations(new_liste_vertices, 2))
@@ -255,7 +261,7 @@ for pair_value in list_combinations:
         # if count % 100 == 0:
         # print(f"Valid {pair_value=}: Area={area}")
         plot_rectangle(
-            matrix, (slice_x, slice_y), save=True, number=valid_count, show=False
+            matrix, (slice_x, slice_y), save=False, number=valid_count, show=True
         )
         valid_count += 1
     count += 1
@@ -300,10 +306,12 @@ def plot_rectangle_v2(matrix, slice_xy, pair_1, pair2):
     plt.show()
 
 
-compute_area(pair_uncompressed)
+area=compute_area(pair_uncompressed)
+print(f"Answer:{area=} ")
+
 plot_rectangle_v2(matrix, slices_max, pair_1, pair_2)
 
-
+# 459405162
 # 570606225 to low
 # %%
 def find_max_area(liste_area, list_slice, index):
