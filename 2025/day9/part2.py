@@ -1,4 +1,5 @@
 # %%
+import sys
 from itertools import combinations, product
 from pathlib import Path
 
@@ -50,7 +51,6 @@ def get_max_size(liste):
 def create_matrix(liste):
     max_x, max_y = get_max_size(liste)
     print(f"{max_x=} {max_y=}")
-    # matrix = np.zeros((max_x + 1, max_y + 1))
     matrix = np.zeros((max_y + 1, max_x + 1))
     return matrix
 
@@ -61,10 +61,6 @@ def create_matrix(liste):
 matrix = create_matrix(liste)
 for coor in liste:
     matrix[(coor[1], coor[0])] = 2
-
-# plt.imshow(matrix)
-# plt.show()
-
 
 # %%
 #########################
@@ -101,7 +97,7 @@ def compress_2d(liste):
         new_liste_x.append(rank_x)
         new_liste_y.append(rank_y)
         new_liste_vertices.append((rank_x, rank_y))
-    return new_liste_vertices
+    return new_liste_vertices, dict_mapping_x, dict_mapping_y
 
 
 def add_vertice_to_matrix(list_vertices, matrix):
@@ -110,7 +106,7 @@ def add_vertice_to_matrix(list_vertices, matrix):
     return matrix
 
 
-new_liste_vertices = compress_2d(liste)
+new_liste_vertices, dict_mapping_x, dict_mapping_y = compress_2d(liste)
 print(f"{new_liste_vertices}")
 matrix = create_matrix(new_liste_vertices)
 matrix = add_vertice_to_matrix(new_liste_vertices, matrix)
@@ -147,7 +143,7 @@ def fill_edges(matrix, liste_vertices):
             minx = min(next_x, current_x)
             matrix[minx : minx + delta_x + 1, current_y] = 1
         else:
-            raise Exception("not a 0 in delta")
+            raise ValueError("not a 0 in delta")
         print("*" * 20)
     return matrix
 
@@ -159,7 +155,6 @@ print(matrix)
 plt.imshow(matrix)
 plt.show()
 # %%
-import sys
 
 sys.setrecursionlimit(50_000)
 
@@ -208,42 +203,121 @@ def is_sub_matrix_valid(matrix, x1, y1, x2, y2):
     miny = min(y1, y2)
     maxx = max(x1, x2)
     maxy = max(y1, y2)
-
+    is_polygon_valid = True
+    slice_x = slice(minx, maxx)
     if minx == maxx:
-        is_null: bool = matrix_is_null(matrix[minx, miny:maxy])
-    elif miny == maxy:
-        is_null: bool = matrix_is_null(matrix[minx:maxx, miny])
-    else:
-        is_null: bool = matrix_is_null(matrix[minx:maxx, miny:maxy])
+        slice_x = minx
+
+    slice_y = slice(miny, maxy)
+    if miny == maxy:
+        slice_y = slice(miny)
+
+    is_null: bool = matrix_is_null(matrix[slice_x, slice_y])
     if is_null:
-        return False
-    else:
-        return True
+        is_polygon_valid = False
+    return is_polygon_valid, slice_x, slice_y
 
 
 def matrix_is_null(matrix):
     result = np.where(matrix == 0)[0]
     if result.shape[0] > 0:
-        return False
-    return True
+        return True
+    return False
 
 
-list_combinations = combinations(new_liste_vertices, 2)
+def plot_rectangle(matrix, slice_xy, save=False, number=0, show=True):
+    copy_matrix = matrix.copy()
+    copy_matrix[slice_xy[0], slice_xy[1]] = 2
+    plt.imshow(copy_matrix)
+    if save:
+        plt.savefig(f"images/ploygon_{number}.png")
+    if show:
+        plt.show()
+
+
+list_combinations = list(combinations(new_liste_vertices, 2))
 liste_area = []
-liste_distance = []
-list_pair_values = []
+list_slice = []
+list_valid_pairs = []
+count = 0
+valid_count = 0
 for pair_value in list_combinations:
     coor1, coor2 = pair_value[0], pair_value[1]
     x1, y1 = coor1[0], coor1[1]
     x2, y2 = coor2[0], coor2[1]
-    if is_sub_matrix_valid(matrix, x1, y1, x2, y2):
-        list_pair_values.append(pair_value)
-        area = compute_area(pair_value)
-        print(f"{pair_value=}: Area={area}")
-        liste_area.append(area)
-    else:
-        print("Not valid")
-print(f"Answer={np.max(liste_area)}")
+    is_valid, slice_x, slice_y = is_sub_matrix_valid(matrix, x1, y1, x2, y2)
 
+    if is_valid:
+        area = compute_area(pair_value)
+        liste_area.append(area)
+        list_slice.append((slice_x, slice_y))
+        list_valid_pairs.append(pair_value)
+        # if count % 100 == 0:
+        # print(f"Valid {pair_value=}: Area={area}")
+        plot_rectangle(
+            matrix, (slice_x, slice_y), save=True, number=valid_count, show=False
+        )
+        valid_count += 1
+    count += 1
+
+    #
+    # if count % 5 == 0:
+    #     copy_matrix = matrix.copy()
+    #     copy_matrix[slice_x, slice_y] = 0.5
+    #     plt.imshow(copy_matrix)
+    #     plt.show()
+print(f"Valids areas = {len(liste_area)}")
 # %%
 # too low 18360
+index = np.argmax(liste_area)
+pair_1, pair_2 = list_valid_pairs[index]
+max_area = liste_area[index]
+slices_max = list_slice[index]
+print(f"Answer:{max_area=} {slices_max=}")
+
+mapping_x_keys = list(dict_mapping_x.keys())
+pair1_x_uncompressed = mapping_x_keys[pair_1[0]]
+pair1_y_uncompressed = mapping_x_keys[pair_1[1]]
+pair1_uncompressed = pair1_x_uncompressed, pair1_y_uncompressed
+
+mapping_y_keys = list(dict_mapping_y.keys())
+pair2_x_uncompressed = mapping_y_keys[pair_2[0]]
+pair2_y_uncompressed = mapping_y_keys[pair_2[1]]
+pair2_uncompressed = pair2_x_uncompressed, pair2_y_uncompressed
+
+pair_uncompressed = (
+    pair1_uncompressed,
+    pair2_uncompressed,
+)
+
+
+def plot_rectangle_v2(matrix, slice_xy, pair_1, pair2):
+    copy_matrix = matrix.copy()
+    copy_matrix[slice_xy[0], slice_xy[1]] = 2
+    copy_matrix[pair_1] = 3
+    copy_matrix[pair2] = 3
+    plt.imshow(copy_matrix)
+    plt.show()
+
+
+compute_area(pair_uncompressed)
+plot_rectangle_v2(matrix, slices_max, pair_1, pair_2)
+
+
+# 570606225 to low
+# %%
+def find_max_area(liste_area, list_slice, index):
+    list_index_sorted = np.argsort(liste_area)[::-1]
+    sorted_areas = np.sort(liste_area)[::-1]
+    list_slice_sorted = np.array(list_slice)[list_index_sorted]
+    max_area = sorted_areas[index]
+    slices_max = list_slice_sorted[index]
+    print(f"Answer:{max_area=} {slices_max=}")
+    return slices_max
+
+
+for i in range(3):
+    print(f"Last max value is: {i}")
+    slice_xy = find_max_area(liste_area, list_slice, i)
+    plot_rectangle(matrix, slice_xy, save=True, number=i)
+# %%
