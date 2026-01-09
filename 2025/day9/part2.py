@@ -29,8 +29,8 @@ def get_content(use_demo: bool):
         parsed_liste.append(temporary_tuple)
     return parsed_liste
 
-
-liste = get_content(use_demo=False)
+use_demo=False
+liste = get_content(use_demo=use_demo)
 print(f"input={liste}")
 
 
@@ -51,7 +51,7 @@ def get_max_size(liste):
 def create_matrix(liste):
     max_x, max_y = get_max_size(liste)
     print(f"{max_x=} {max_y=}")
-    matrix = np.zeros((max_y + 1, max_x + 1))
+    matrix = np.zeros((max_x + 1, max_y + 1))
     return matrix
 
 
@@ -60,8 +60,11 @@ def create_matrix(liste):
 #####################################
 matrix = create_matrix(liste)
 for coor in liste:
-    matrix[(coor[1], coor[0])] = 2
+    matrix[(coor[0], coor[1])] = 2
 
+if use_demo:
+    plt.imshow(matrix)
+    plt.show()
 # %%
 #########################
 ###### Compress #########
@@ -102,7 +105,12 @@ def compress_2d(liste):
 
 def add_vertice_to_matrix(list_vertices, matrix):
     for coor in list_vertices:
-        matrix[(coor[1], coor[0])] = 2
+        matrix[
+            (
+                coor[0],
+                coor[1],
+            )
+        ] = 2
     return matrix
 
 
@@ -125,16 +133,16 @@ def get_next_vetice(i, liste_vertices):
         after_vertice = liste_vertices[0]
     else:
         after_vertice = liste_vertices[i + 1]
-    return after_vertice[1], after_vertice[0]
+    return after_vertice[0], after_vertice[1]
 
 
 def fill_edges(matrix, liste_vertices):
     for i, current_vertice in enumerate(liste_vertices):
         next_x, next_y = get_next_vetice(i, liste_vertices)
-        current_x, current_y = current_vertice[1], current_vertice[0]
+        current_x, current_y = current_vertice[0], current_vertice[1]
         print(f"current({current_x},{current_y}) ({next_x},{next_y})")
-        delta_x = abs(next_x - current_vertice[1])
-        delta_y = abs(next_y - current_vertice[0])
+        delta_x = abs(next_x - current_vertice[0])
+        delta_y = abs(next_y - current_vertice[1])
         print(f"{delta_x=} {delta_y=}")
         if delta_x == 0:
             miny = min(next_y, current_y)
@@ -167,7 +175,9 @@ matrix = fill_edges(matrix, new_liste_vertices)
 #################################
 input_x = 100
 input_y = 100
-
+if use_demo:
+    input_x=2
+    input_y=1
 
 def dfs(matrix, input_x, input_y):
     list_neigbors = product(
@@ -192,8 +202,8 @@ plt.show()
 ###################################
 def compute_area(pair_value):
     coor1, coor2 = pair_value[0], pair_value[1]
-    largeur = abs(coor1[0] - coor2[0]) + 1
-    longueur = abs(coor1[1] - coor2[1]) + 1
+    largeur = abs(coor1[0] - coor2[0])
+    longueur = abs(coor1[1] - coor2[1])
     area = largeur * longueur
     return area
 
@@ -258,11 +268,11 @@ for pair_value in list_combinations:
         liste_area.append(area)
         list_slice.append((slice_x, slice_y))
         list_valid_pairs.append(pair_value)
-        # if count % 100 == 0:
+
         # print(f"Valid {pair_value=}: Area={area}")
-        plot_rectangle(
-            matrix, (slice_x, slice_y), save=False, number=valid_count, show=True
-        )
+        # plot_rectangle(
+        #     matrix, (slice_x, slice_y), save=True, number=valid_count, show=False
+        # )
         valid_count += 1
     count += 1
 
@@ -274,45 +284,74 @@ for pair_value in list_combinations:
     #     plt.show()
 print(f"Valids areas = {len(liste_area)}")
 # %%
-# too low 18360
-index = np.argmax(liste_area)
-pair_1, pair_2 = list_valid_pairs[index]
-max_area = liste_area[index]
-slices_max = list_slice[index]
-print(f"Answer:{max_area=} {slices_max=}")
 
-mapping_x_keys = list(dict_mapping_x.keys())
-pair1_x_uncompressed = mapping_x_keys[pair_1[0]]
-pair1_y_uncompressed = mapping_x_keys[pair_1[1]]
-pair1_uncompressed = pair1_x_uncompressed, pair1_y_uncompressed
 
-mapping_y_keys = list(dict_mapping_y.keys())
-pair2_x_uncompressed = mapping_y_keys[pair_2[0]]
-pair2_y_uncompressed = mapping_y_keys[pair_2[1]]
-pair2_uncompressed = pair2_x_uncompressed, pair2_y_uncompressed
+def get_uncompressed(pair_1, pair_2):
+    mapping_x_keys = list(dict_mapping_x.keys())
+    mapping_y_keys = list(dict_mapping_y.keys())
 
-pair_uncompressed = (
-    pair1_uncompressed,
-    pair2_uncompressed,
-)
+    pair1_x_uncompressed = mapping_x_keys[pair_1[0]]
+    pair2_x_uncompressed = mapping_x_keys[pair_2[0]]
+
+    pair1_y_uncompressed = mapping_y_keys[pair_1[1]]
+    pair2_y_uncompressed = mapping_y_keys[pair_2[1]]
+
+    pair1_uncompressed = pair1_x_uncompressed, pair1_y_uncompressed
+    pair2_uncompressed = pair2_x_uncompressed, pair2_y_uncompressed
+
+    pair_uncompressed = (
+        pair1_uncompressed,
+        pair2_uncompressed,
+    )
+    return pair_uncompressed
+
+
+uncompressed_areas = []
+for i, pair_area in enumerate(liste_area):
+    pair_1, pair_2 = list_valid_pairs[i]
+    pair_uncompressed = get_uncompressed(pair_1, pair_2)
+    area = compute_area(pair_uncompressed)
+    uncompressed_areas.append(area)
+
+index = np.argmax(uncompressed_areas)
+print(f"Answer:{uncompressed_areas[index]=} ")
 
 
 def plot_rectangle_v2(matrix, slice_xy, pair_1, pair2):
     copy_matrix = matrix.copy()
     copy_matrix[slice_xy[0], slice_xy[1]] = 2
+    print(f"matrix is fill here {np.where(copy_matrix == 2)[0].shape}")
     copy_matrix[pair_1] = 3
     copy_matrix[pair2] = 3
     plt.imshow(copy_matrix)
     plt.show()
+    return copy_matrix
 
 
-area=compute_area(pair_uncompressed)
-print(f"Answer:{area=} ")
+# copy_matrix = plot_rectangle_v2(matrix, slices_max, pair_1, pair_2)
 
-plot_rectangle_v2(matrix, slices_max, pair_1, pair_2)
 
 # 459405162
 # 570606225 to low
+# 1772419530 to high
+# 1733493120 no
+# 1733385357 no
+# 1613305596 --> righ answer
+# index_sorted = np.argsort(uncompressed_areas)
+# pair_area[index_sorted][:]
+print(f"{np.sort(uncompressed_areas)}")
+# %%
+pair = list_valid_pairs[1080]
+slicee=list_slice[1080]
+print(f"{pair=}")
+plot_rectangle_v2(matrix, slicee,pair[0], pair[1])
+#%%
+pair = list_valid_pairs[1076]
+slicee=list_slice[1076]
+print(f"{pair=}")
+
+plot_rectangle_v2(matrix, slicee,pair[0], pair[1])
+
 # %%
 def find_max_area(liste_area, list_slice, index):
     list_index_sorted = np.argsort(liste_area)[::-1]
