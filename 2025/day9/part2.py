@@ -29,7 +29,8 @@ def get_content(use_demo: bool):
         parsed_liste.append(temporary_tuple)
     return parsed_liste
 
-use_demo=False
+
+use_demo = False
 liste = get_content(use_demo=use_demo)
 print(f"input={liste}")
 
@@ -176,8 +177,9 @@ matrix = fill_edges(matrix, new_liste_vertices)
 input_x = 100
 input_y = 100
 if use_demo:
-    input_x=2
-    input_y=1
+    input_x = 2
+    input_y = 1
+
 
 def dfs(matrix, input_x, input_y):
     list_neigbors = product(
@@ -202,8 +204,8 @@ plt.show()
 ###################################
 def compute_area(pair_value):
     coor1, coor2 = pair_value[0], pair_value[1]
-    largeur = abs(coor1[0] - coor2[0])
-    longueur = abs(coor1[1] - coor2[1])
+    largeur = abs(coor1[0] - coor2[0]) + 1
+    longueur = abs(coor1[1] - coor2[1]) + 1
     area = largeur * longueur
     return area
 
@@ -214,11 +216,11 @@ def is_sub_matrix_valid(matrix, x1, y1, x2, y2):
     maxx = max(x1, x2)
     maxy = max(y1, y2)
     is_polygon_valid = True
-    slice_x = slice(minx, maxx)
+    slice_x = slice(minx, maxx + 1)
     if minx == maxx:
         slice_x = minx
 
-    slice_y = slice(miny, maxy)
+    slice_y = slice(miny, maxy + 1)
     if miny == maxy:
         slice_y = slice(miny)
 
@@ -238,7 +240,6 @@ def matrix_is_null(matrix):
 def plot_rectangle(matrix, slice_xy, save=False, number=0, show=True):
     img_name = Path(f"images/ploygon_{number}.png")
     if not show and img_name.exists():
-        print("skip")
         return None
     copy_matrix = matrix.copy()
     copy_matrix[slice_xy[0], slice_xy[1]] = 2
@@ -269,19 +270,12 @@ for pair_value in list_combinations:
         list_slice.append((slice_x, slice_y))
         list_valid_pairs.append(pair_value)
 
-        # print(f"Valid {pair_value=}: Area={area}")
-        # plot_rectangle(
-        #     matrix, (slice_x, slice_y), save=True, number=valid_count, show=False
-        # )
+        plot_rectangle(
+            matrix, (slice_x, slice_y), save=True, number=valid_count, show=False
+        )
         valid_count += 1
     count += 1
 
-    #
-    # if count % 5 == 0:
-    #     copy_matrix = matrix.copy()
-    #     copy_matrix[slice_x, slice_y] = 0.5
-    #     plt.imshow(copy_matrix)
-    #     plt.show()
 print(f"Valids areas = {len(liste_area)}")
 # %%
 
@@ -314,57 +308,4 @@ for i, pair_area in enumerate(liste_area):
     uncompressed_areas.append(area)
 
 index = np.argmax(uncompressed_areas)
-print(f"Answer:{uncompressed_areas[index]=} ")
-
-
-def plot_rectangle_v2(matrix, slice_xy, pair_1, pair2):
-    copy_matrix = matrix.copy()
-    copy_matrix[slice_xy[0], slice_xy[1]] = 2
-    print(f"matrix is fill here {np.where(copy_matrix == 2)[0].shape}")
-    copy_matrix[pair_1] = 3
-    copy_matrix[pair2] = 3
-    plt.imshow(copy_matrix)
-    plt.show()
-    return copy_matrix
-
-
-# copy_matrix = plot_rectangle_v2(matrix, slices_max, pair_1, pair_2)
-
-
-# 459405162
-# 570606225 to low
-# 1772419530 to high
-# 1733493120 no
-# 1733385357 no
-# 1613305596 --> righ answer
-# index_sorted = np.argsort(uncompressed_areas)
-# pair_area[index_sorted][:]
-print(f"{np.sort(uncompressed_areas)}")
-# %%
-pair = list_valid_pairs[1080]
-slicee=list_slice[1080]
-print(f"{pair=}")
-plot_rectangle_v2(matrix, slicee,pair[0], pair[1])
-#%%
-pair = list_valid_pairs[1076]
-slicee=list_slice[1076]
-print(f"{pair=}")
-
-plot_rectangle_v2(matrix, slicee,pair[0], pair[1])
-
-# %%
-def find_max_area(liste_area, list_slice, index):
-    list_index_sorted = np.argsort(liste_area)[::-1]
-    sorted_areas = np.sort(liste_area)[::-1]
-    list_slice_sorted = np.array(list_slice)[list_index_sorted]
-    max_area = sorted_areas[index]
-    slices_max = list_slice_sorted[index]
-    print(f"Answer:{max_area=} {slices_max=}")
-    return slices_max
-
-
-for i in range(3):
-    print(f"Last max value is: {i}")
-    slice_xy = find_max_area(liste_area, list_slice, i)
-    plot_rectangle(matrix, slice_xy, save=True, number=i)
-# %%
+print(f"Answer:{uncompressed_areas[index]} ")
