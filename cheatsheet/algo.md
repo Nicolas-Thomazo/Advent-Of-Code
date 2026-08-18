@@ -11,11 +11,13 @@ Propriétés d'une min-heap :
 - C'est un arbre binaire où chaque parent est inférieur ou égal à ses enfants.
 - Les enfants entre eux n'ont pas besoin d'être triés.
 
+```text
           1
         /   \
        3     2
       / \   / \
      7   5 8   4
+```
 
 Complexités
 - Regarder le plus petit élement: O(1)
